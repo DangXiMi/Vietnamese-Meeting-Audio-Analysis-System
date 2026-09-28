@@ -1,0 +1,35 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+
+# --- Test / lint / type-check caches ---
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# --- IDE / editor ---
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# --- Secrets (never commit; .env.example is the template) ---
+.env
+
+# --- Runtime data (uploads, artifacts, model cache) ---
+data/
+models_cache/
+
+# --- DSH harness skill store (tooling, not project source) ---
+.agents/

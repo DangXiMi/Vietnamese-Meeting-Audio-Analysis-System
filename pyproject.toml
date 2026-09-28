@@ -1,0 +1,61 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "meeting-audio-analysis"
+version = "0.1.0"
+description = "Vietnamese meeting audio analysis: ASR, speaker diarization, per-speaker gender, and per-utterance emotion."
+readme = "README.md"
+requires-python = ">=3.11,<3.12"
+license = { text = "MIT" }
+authors = [
+    { name = "Võ Lê Hải Đăng", email = "dang.vomi15012005@hcmut.edu.vn" },
+]
+dependencies = [
+    # ASR
+    "faster-whisper>=1.0.0",
+    # Diarization
+    "pyannote.audio>=3.1.0",
+    # Gender (wav2vec2 audio classifier) + Emotion (PhoBERT) via HF transformers
+    "transformers>=4.40.0",
+    # Audio I/O, resampling, F0 estimation
+    "librosa>=0.10.0",
+    "soundfile>=0.12.1",
+    # Numerics / signal processing
+    "numpy>=1.26.0",
+    "scipy>=1.11.0",
+    # Domain models + configuration
+    "pydantic>=2.6.0",
+    "pydantic-settings>=2.2.0",
+    "PyYAML>=6.0.0",
+    "huggingface-hub>=0.23.0",
+]
+
+# NOTE: torch / torchaudio are intentionally NOT declared here. They are already
+# installed with the CUDA 12.6 build (torch 2.11.0+cu126) that matches this
+# machine's GPU; reinstalling from PyPI would clobber the CUDA build.
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "ruff>=0.4.0",
+    "mypy>=1.9.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.mypy]
+python_version = "3.11"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
