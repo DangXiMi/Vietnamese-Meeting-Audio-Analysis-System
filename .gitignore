@@ -28,7 +28,8 @@ htmlcov/
 .env
 
 # --- Runtime data (uploads, artifacts, model cache) ---
-data/
+data/artifacts
+data/uploads
 models_cache/
 
 # --- DSH harness skill store (tooling, not project source) ---

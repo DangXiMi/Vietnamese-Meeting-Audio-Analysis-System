@@ -10,8 +10,27 @@ Built for **fully local inference** on consumer hardware (NVIDIA RTX 3050 Laptop
 
 ---
 
+## Demo
+
+Real runs of the Streamlit UI on a Vietnamese two-person conversation.
+
+**Transcript and analysis results** — the sidebar exposes the ASR model,
+language, device, and speaker count; the transcript renders in the required
+`[<Gender> <Speaker> - <Emotion>]: "<text>"` format.
+
+![Streamlit demo — transcript and analysis results](assets/demo1.png)
+
+**Speaker detail and structured output** — per-speaker gender with confidence,
+median F0 and decision source, the emotion distribution, and the JSON segments
+that back the transcript.
+
+![Streamlit demo — speaker details and structured JSON output](assets/demo2.png)
+
+---
+
 ## Table of contents
 
+- [Demo](#demo)
 - [What it does](#what-it-does)
 - [Output contract](#output-contract)
 - [Quick start](#quick-start)
@@ -243,8 +262,20 @@ reference RTX 3050.
 
 ### Sample data
 
-No recording is committed. Place your own in `data/raw/` — any format FFmpeg
-can decode. All runtime directories (`data/`, `models_cache/`) are created
+Two recordings ship in `data/raw/`, so the pipeline can be run immediately:
+
+| File | Content | Length |
+|---|---|---|
+| `Các Đoạn Hội Thoại Tiếng Việt hằng ngày _ Learn Vietnamese with Tiên.mp4` | Two-person Vietnamese conversation | 7 min 09 s |
+| `Vietnamese dialogue 6. Conversation topic_ Job interview…​.mp4` | Scripted Vietnamese job-interview dialogue | 32 s |
+
+```powershell
+$env:PYTHONPATH = "src"
+python -m meeting_analysis.cli "data/raw/Vietnamese dialogue 6. Conversation topic_ Job interview for an English teaching position in Vietnam.mp4" -o data/artifacts
+```
+
+Any format FFmpeg can decode also works. The other runtime directories
+(`data/uploads/`, `data/artifacts/`, `models_cache/`) are gitignored and created
 automatically on first use.
 
 ### Self-check before reporting a problem
@@ -379,8 +410,13 @@ streamlit run app.py --server.address 127.0.0.1
 ├── app.py                        Streamlit demo UI
 ├── pyproject.toml                Packaging, dependencies, tool config
 ├── requirements.txt              Runtime dependency list
-├── constraints.txt               Pins the pre-installed CUDA torch build
+├── constraints.txt               Pins the CUDA torch build (dev machine only)
 ├── .env.example                  Credential/config template
+├── assets/
+│   ├── demo1.png                 Screenshot — transcript and analysis results
+│   └── demo2.png                 Screenshot — speaker detail and JSON output
+├── data/
+│   └── raw/                      Sample recordings (committed)
 ├── scripts/
 │   └── prefetch_models.py        Warm the model cache before first run
 ├── src/meeting_analysis/
@@ -405,14 +441,15 @@ streamlit run app.py --server.address 127.0.0.1
 │   ├── test_models.py            Output-contract tests
 │   ├── test_alignment.py         Alignment edge-case tests
 │   └── test_evaluation.py        Metric known-answer tests
-└── docs/
+└── docs/                         local only — gitignored
     ├── ARCHITECTURE.md           Design and data flow
     ├── IMPLEMENTATION_NOTES.md   Engineering record
     └── SUPERVISOR_GUIDE.md       Presentation guide
 ```
 
-Runtime directories (`data/`, `models_cache/`) are gitignored. Place input
-recordings in `data/raw/`.
+Generated at runtime and gitignored: `data/uploads/`, `data/artifacts/`, and
+`models_cache/`. All are created automatically on first use — only `data/raw/`
+is committed, as sample input.
 
 ---
 
