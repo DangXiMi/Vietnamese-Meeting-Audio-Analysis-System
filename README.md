@@ -221,7 +221,7 @@ python scripts/prefetch_models.py
 
 ```powershell
 $env:PYTHONPATH = "src"
-python -m meeting_analysis.cli "data/raw/meeting.mp4" -o data/artifacts
+python -m meeting_analysis.cli "data/raw/Các Đoạn Hội Thoại Tiếng Việt hằng ngày _ Learn Vietnamese with Tiên.mp4" -o data/artifacts
 ```
 
 Outputs land in `data/artifacts/`:
@@ -230,6 +230,37 @@ Outputs land in `data/artifacts/`:
 <name>.txt          the transcript
 <name>.json         the segment array
 <name>.16k.wav      the normalized audio
+```
+---
+
+## Web interface
+
+```powershell
+streamlit run app.py
+```
+
+Opens at **<http://localhost:8501>**.
+
+Features:
+
+- Upload any audio/video format, with inline playback
+- Sidebar controls for ASR model, language, device, and speaker count
+- Metric cards: speakers / utterances / duration
+- Per-speaker gender table with confidence, median F0, and decision source
+- Emotion distribution chart
+- Transcript rendered in the required format
+- Expandable structured JSON and alignment-flags panel
+- Download buttons for both `.txt` and `.json`
+
+The UI calls the same `run_pipeline` + `emit` functions as the CLI, so its
+downloads are byte-identical to the command-line artifacts. Analysis is
+synchronous — expect roughly 5 minutes for a 7-minute recording, dominated by
+diarization.
+
+For a safe local-only bind:
+
+```powershell
+streamlit run app.py --server.address 127.0.0.1
 ```
 
 ---
@@ -368,38 +399,6 @@ python -m meeting_analysis.cli <audio> [-o OUT] [--asr-model SIZE]
 > frequently misdetect as English or Chinese. However, for **mixed
 > Vietnamese/English** recordings, forcing one language mangles the other into
 > nonsense syllables. Use `--language auto` (or `--language en`) in that case.
-
----
-
-## Web interface
-
-```powershell
-streamlit run app.py
-```
-
-Opens at **<http://localhost:8501>**.
-
-Features:
-
-- Upload any audio/video format, with inline playback
-- Sidebar controls for ASR model, language, device, and speaker count
-- Metric cards: speakers / utterances / duration
-- Per-speaker gender table with confidence, median F0, and decision source
-- Emotion distribution chart
-- Transcript rendered in the required format
-- Expandable structured JSON and alignment-flags panel
-- Download buttons for both `.txt` and `.json`
-
-The UI calls the same `run_pipeline` + `emit` functions as the CLI, so its
-downloads are byte-identical to the command-line artifacts. Analysis is
-synchronous — expect roughly 5 minutes for a 7-minute recording, dominated by
-diarization.
-
-For a safe local-only bind:
-
-```powershell
-streamlit run app.py --server.address 127.0.0.1
-```
 
 ---
 
