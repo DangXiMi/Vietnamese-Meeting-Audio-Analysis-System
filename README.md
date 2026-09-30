@@ -149,7 +149,24 @@ normalized `<name>.16k.wav`.
 - **Model cache.** The default `~/.cache/huggingface` may be unwritable, so the
   cache is redirected to `models_cache/` inside the project automatically.
 
+## Demo UI (Streamlit)
+
+```powershell
+streamlit run app.py
+```
+
+Opens at **http://localhost:8501**. Upload a recording, click **Analyze**, then
+read the transcript in the app and download the `.txt` / `.json`.
+
+The UI calls the same `run_pipeline` + `emit` functions as the CLI, so its
+downloads are byte-identical to the command-line artifacts. It also shows the
+per-speaker gender table (with median F0), the emotion distribution, and any
+alignment flags.
+
+Analysis is **synchronous**: a 7-minute recording takes roughly 5 minutes on the
+RTX 3050, dominated by diarization.
+
 ## Status
 
-Working CLI pipeline (demo). Not yet implemented: FastAPI service, Streamlit
-UI, SQLite job history.
+Working end-to-end: CLI and Streamlit UI producing the required TXT + JSON.
+Not yet implemented: FastAPI service, SQLite job history.

@@ -30,6 +30,8 @@ dependencies = [
     "pydantic-settings>=2.2.0",
     "PyYAML>=6.0.0",
     "huggingface-hub>=0.23.0",
+    # Vietnamese word segmentation (improves PhoBERT emotion input)
+    "pyvi>=0.1.1",
 ]
 
 # NOTE: torch / torchaudio are intentionally NOT declared here. They are already
@@ -41,6 +43,9 @@ dev = [
     "pytest>=8.0.0",
     "ruff>=0.4.0",
     "mypy>=1.9.0",
+]
+ui = [
+    "streamlit>=1.30.0",
 ]
 
 [tool.setuptools.packages.find]
