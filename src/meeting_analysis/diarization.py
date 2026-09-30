@@ -15,6 +15,13 @@ from .utils.gpu import free_cuda
 
 logger = logging.getLogger(__name__)
 
+# Signature of the cuDNN failure described in PyannoteDiarizer._ensure_pipeline.
+_ENGINE_ERROR = "unable to find an engine"
+
+
+def _is_cudnn_engine_error(exc: BaseException) -> bool:
+    return _ENGINE_ERROR in str(exc).lower()
+
 
 class PyannoteDiarizer:
     """Speaker diarization via ``pyannote/speaker-diarization-3.1``.
@@ -29,11 +36,13 @@ class PyannoteDiarizer:
         device: str = "cuda",
         token: str | None = None,
         num_speakers: int | None = None,
+        batch_size: int = 0,
     ) -> None:
         self.model = model
         self.device = device
         self.token = token
         self.num_speakers = num_speakers
+        self.batch_size = batch_size
         self._pipeline = None
 
     def _ensure_pipeline(self):
@@ -49,6 +58,27 @@ class PyannoteDiarizer:
                 pipeline = Pipeline.from_pretrained(self.model, token=self.token)
             if self.device == "cuda" and torch.cuda.is_available():
                 pipeline.to(torch.device("cuda"))
+                # cuDNN's default heuristic algorithm selection can fail to find
+                # *any* convolution algorithm for the wespeaker ResNet, raising
+                # "GET was unable to find an engine to execute this computation"
+                # deep inside the embedding forward pass. Benchmark mode makes
+                # cuDNN actually search for a working algorithm.
+                torch.backends.cudnn.benchmark = True
+                # Opt-in only (DIARIZATION_BATCH_SIZE). Lowering the batch size
+                # reduced memory but made diarization dramatically slower on
+                # this 4 GB card, so pyannote's own default is kept unless the
+                # caller explicitly asks otherwise.
+                if self.batch_size > 0:
+                    for attribute in ("embedding_batch_size", "segmentation_batch_size"):
+                        current = getattr(pipeline, attribute, None)
+                        if isinstance(current, int) and current > self.batch_size:
+                            setattr(pipeline, attribute, self.batch_size)
+                            logger.info(
+                                "Capped %s: %d -> %d (requested)",
+                                attribute,
+                                current,
+                                self.batch_size,
+                            )
             self._pipeline = pipeline
         return self._pipeline
 
@@ -84,7 +114,24 @@ class PyannoteDiarizer:
         if self.num_speakers:
             kwargs["num_speakers"] = self.num_speakers
 
-        raw = pipeline(payload, **kwargs)
+        try:
+            raw = pipeline(payload, **kwargs)
+        except RuntimeError as exc:
+            if not _is_cudnn_engine_error(exc):
+                raise
+            # Last resort: PyTorch's native convolution implementation. Slower
+            # per operator, but it is always available and it keeps diarization
+            # working instead of failing the whole run.
+            import torch
+
+            logger.warning(
+                "cuDNN could not supply a convolution algorithm (%s); "
+                "retrying with cuDNN disabled.",
+                str(exc)[:90],
+            )
+            torch.backends.cudnn.enabled = False
+            raw = pipeline(payload, **kwargs)
+
         annotation = self._to_annotation(raw)
 
         turns = [

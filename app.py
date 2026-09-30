@@ -23,6 +23,7 @@ import meeting_analysis  # noqa: E402,F401  (configures the HF cache on import)
 from meeting_analysis.config import Settings  # noqa: E402
 from meeting_analysis.pipeline import emit, run_pipeline  # noqa: E402
 from meeting_analysis.utils.logging import configure_logging  # noqa: E402
+from meeting_analysis.utils.gpu import free_cuda, free_vram_gb  # noqa: E402
 
 UPLOAD_DIR = PROJECT_ROOT / "data" / "uploads"
 ARTIFACT_DIR = PROJECT_ROOT / "data" / "artifacts"
@@ -131,6 +132,17 @@ def main() -> None:
             "Force speaker count (0 = auto-detect)", min_value=0, max_value=12, value=0
         )
         st.divider()
+        free_gb = free_vram_gb()
+        if free_gb is not None:
+            st.caption(f"Free GPU memory: **{free_gb:.2f} GB**")
+            if free_gb < 1.2:
+                st.warning(
+                    "Low GPU memory. Another process may still hold the GPU; "
+                    "release it below or close the stale `python.exe`."
+                )
+            if st.button("Release cached GPU memory"):
+                free_cuda()
+                st.success("Released. The figure above refreshes on the next interaction.")
         st.caption(
             "Requires **FFmpeg** on PATH and an **HF token** in `.env` with the "
             "pyannote licences accepted. See README."

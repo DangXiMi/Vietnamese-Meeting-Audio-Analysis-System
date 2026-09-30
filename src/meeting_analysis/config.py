@@ -84,6 +84,10 @@ class Settings:
     # Diarization
     diarization_model: str = "pyannote/speaker-diarization-3.1"
     num_speakers: int | None = None  # None => let pyannote detect
+    # 0 = keep pyannote's own batch size (the previously-verified configuration).
+    # Lowering it did not help on this 4 GB card and made diarization far
+    # slower, so it is opt-in rather than a default.
+    diarization_batch_size: int = int(os.environ.get("DIARIZATION_BATCH_SIZE", "0"))
 
     # Gender (per speaker, pooled audio)
     gender_model: str = os.environ.get(

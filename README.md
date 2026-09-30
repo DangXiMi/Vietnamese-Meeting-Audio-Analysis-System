@@ -448,6 +448,8 @@ the next loads.
 | Symptom | Cause and fix |
 |---|---|
 | `Library cublas64_12.dll is not found` | CTranslate2 cannot see torch's bundled CUDA DLLs. Handled automatically by `utils/gpu.py::register_cuda_dlls`; ensure `torch` is the CUDA build. |
+| `GET was unable to find an engine to execute this computation` | cuDNN's heuristic algorithm selection found no convolution engine for the wespeaker embedding ResNet. Handled automatically: the diarizer enables `cudnn.benchmark` and falls back to disabling cuDNN if needed. |
+| Run fails after an earlier failed run | A previous run died before releasing its models. Stages now unload in a `finally` block, and the pipeline refuses to start below ~1.2 GB free VRAM with an actionable message. Close stale `python.exe` processes if it persists. |
 | `403 GatedRepoError` from pyannote | You have not accepted **both** model licences (see step 2), or accepted them under a different account than the token belongs to. |
 | `PermissionError` writing `~/.cache/huggingface` | The default cache is unwritable. The project redirects `HF_HOME` to `./models_cache` automatically; do not override it to an unwritable path. |
 | `UnicodeEncodeError` / `UnicodeDecodeError` | Console or subprocess using cp1252. The CLI reconfigures stdout to UTF-8; for ad-hoc scripts set `PYTHONIOENCODING=utf-8`. |
