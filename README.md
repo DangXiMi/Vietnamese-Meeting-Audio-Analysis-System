@@ -143,7 +143,30 @@ HF_TOKEN=hf_...
 
 Both `HF_TOKEN` and `hf_token` are accepted.
 
-### 4. Install Python dependencies
+### 4. Create a Python Virtual Environment
+#### 1. Create the virtual environment
+```bash
+python -m venv .venv
+```
+
+#### 2. Activate the virtual environment
+
+PowerShell:
+```bash
+.\.venv\Scripts\Activate.ps1
+```
+Command Prompt (CMD):
+```bash
+.venv\Scripts\activate
+```
+
+#### 3. Verify the environment
+```bash
+python --version
+pip --version
+```
+
+### 5. Install Python dependencies
 
 `torch`/`torchvision` are CUDA builds matched to your machine and are pinned in
 `constraints.txt` so pip cannot replace them:
@@ -152,7 +175,7 @@ Both `HF_TOKEN` and `hf_token` are accepted.
 pip install -r requirements.txt
 ```
 
-### 5. Warm the model cache
+### 6. Warm the model cache
 
 The first run downloads several GB and can look like a hang. Pre-fetch instead:
 
@@ -160,7 +183,7 @@ The first run downloads several GB and can look like a hang. Pre-fetch instead:
 python scripts/prefetch_models.py
 ```
 
-### 6. Run
+### 7. Run
 
 ```powershell
 $env:PYTHONPATH = "src"
@@ -379,9 +402,6 @@ The reference uses the **same JSON shape** as the pipeline output:
 ]
 ```
 
-You do **not** need to label an entire recording: **2–3 minutes of audio** is
-enough for a statistically meaningful WER/DER estimate.
-
 ### 3. Score
 
 ```powershell
@@ -400,10 +420,6 @@ python -m meeting_analysis.evaluate --reference data/artifacts/reference.json `
 | **Speaker attribution accuracy** | Correct speaker on matched segments, after an **optimal** speaker mapping |
 | **Gender / emotion accuracy** | Label agreement on matched segments, plus an emotion confusion matrix |
 
-Segments are matched one-to-one by maximum temporal overlap, and **speaker
-relabelling is not penalised** — hypothesis speakers are mapped onto reference
-speakers by optimal assignment, so `SPEAKER_00` scoring against `A` counts as
-correct.
 
 > **Status.** The harness is implemented and unit-tested against hand-computed
 > known answers. **No accuracy figures are quoted yet**, because no
@@ -456,17 +472,17 @@ the next loads.
 - **Diarization quality depends on audio quality**, microphone count, and
   overlap. Clean, single-microphone or well-separated audio performs best.
 
-## Roadmap
+## Future Improvement
 
-- [ ] **Labelled reference corpus** — hand-label 2–3 minutes of audio and publish
+-  **Labelled reference corpus** — hand-label 2–3 minutes of audio and publish
       real WER / DER figures using `python -m meeting_analysis.evaluate`
-- [ ] **FastAPI service** — REST endpoints for upload and analysis
-- [ ] **SQLite job history** — persisted job/meeting metadata behind a
+-  **FastAPI service** — REST endpoints for upload and analysis
+-  **SQLite job history** — persisted job/meeting metadata behind a
       repository interface (PostgreSQL-ready)
-- [ ] **Chunked processing** — VAD-bounded windows for multi-hour meetings
-- [ ] **Cloud provider adapters** — implement the existing protocols for a
+-  **Chunked processing** — VAD-bounded windows for multi-hour meetings
+-  **Cloud provider adapters** — implement the existing protocols for a
       managed ASR/diarization backend
-- [ ] **Diarization fallback** — speaker-embedding + clustering implementation
+-  **Diarization fallback** — speaker-embedding + clustering implementation
       behind `Diarizer`
 
 ---

@@ -33,3 +33,5 @@ models_cache/
 
 # --- DSH harness skill store (tooling, not project source) ---
 .agents/
+
+docs/
