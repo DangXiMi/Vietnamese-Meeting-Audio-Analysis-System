@@ -1,0 +1,6 @@
+# Pin the pre-installed CUDA torch stack so pip can never replace it.
+# torch/torchvision are cu126 builds matching this machine's RTX 3050;
+# reinstalling them from PyPI would clobber CUDA support.
+torch==2.11.0+cu126
+torchvision==0.26.0+cu126
+torchaudio==2.11.0+cpu

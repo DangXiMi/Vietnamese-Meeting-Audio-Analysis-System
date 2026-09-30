@@ -1,0 +1,18 @@
+# Runtime dependencies for the meeting analysis pipeline.
+#
+# torch / torchvision are intentionally NOT listed: they are pre-installed
+# CUDA builds matched to this machine and are pinned in constraints.txt so pip
+# cannot replace them. Install with:
+#
+#     pip install -r requirements.txt
+#     pip install -c constraints.txt faster-whisper pyannote.audio librosa soundfile
+#
+faster-whisper>=1.0.0
+pyannote.audio>=3.1.0
+transformers>=4.40.0
+librosa>=0.10.0
+soundfile>=0.12.1
+numpy>=1.26.0
+scipy>=1.11.0
+pydantic>=2.6.0
+huggingface-hub>=0.23.0
