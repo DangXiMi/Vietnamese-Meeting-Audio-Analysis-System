@@ -168,12 +168,27 @@ pip --version
 
 ### 5. Install Python dependencies
 
-`torch`/`torchvision` are CUDA builds matched to your machine and are pinned in
-`constraints.txt` so pip cannot replace them:
+Install PyTorch **first**, choosing the build that matches your hardware. The
+project runs on CPU as well as GPU, but diarization is far slower without CUDA:
+
+```powershell
+# NVIDIA GPU — match the CUDA index to your driver
+pip install torch torchaudio --index-url https://download.pytorch.org/whl/cu124
+
+# ...or CPU only
+pip install torch torchaudio --index-url https://download.pytorch.org/whl/cpu
+```
+
+Then the rest:
 
 ```powershell
 pip install -r requirements.txt
 ```
+
+> **`constraints.txt` is machine-specific.** It pins the exact CUDA build of the
+> development machine (`torch==2.11.0+cu126`), which is **not on PyPI**, and
+> exists only to stop pip replacing an already-working CUDA install. Do **not**
+> pass it on a fresh machine.
 
 ### 6. Warm the model cache
 
@@ -197,6 +212,51 @@ Outputs land in `data/artifacts/`:
 <name>.json         the segment array
 <name>.16k.wav      the normalized audio
 ```
+
+---
+
+## Reproducing on another machine
+
+The system runs fully offline once set up, but it is **not** a
+`pip install && streamlit run` experience. Four things must be in place first:
+
+| Requirement | Why it is needed | Where |
+|---|---|---|
+| FFmpeg on `PATH` | decoding any input container/codec | step 1 — system install, never bundled |
+| PyTorch (CUDA or CPU) | all model inference | step 5 — install **before** `requirements.txt` |
+| A Hugging Face token | the pyannote models are **gated** | steps 2–3 |
+| Licence acceptance on **both** gated repos | a token alone is not enough | step 2 |
+
+### The one unavoidable gate
+
+Access to the gated models is granted **per Hugging Face account**, so every new
+user must accept the licences themselves. No shared token can work around it —
+and accepting only `speaker-diarization-3.1` is *not* sufficient, because
+pyannote.audio 4.x resolves that pipeline through
+`speaker-diarization-community-1`. See step 2.
+
+### Does it need a GPU?
+
+No. `DEVICE=cpu` works and the pipeline degrades automatically, but diarization
+is many times slower. A 7-minute recording takes roughly 4 minutes on the
+reference RTX 3050.
+
+### Sample data
+
+No recording is committed. Place your own in `data/raw/` — any format FFmpeg
+can decode. All runtime directories (`data/`, `models_cache/`) are created
+automatically on first use.
+
+### Self-check before reporting a problem
+
+```powershell
+ffmpeg -version                      # FFmpeg present
+python -m pytest tests -q            # 40 tests, no GPU or downloads needed
+python scripts/prefetch_models.py    # confirms token + licence access
+```
+
+`prefetch_models.py` is the fastest way to verify the gated-model setup: if it
+reports all repos available, diarization will run.
 
 ---
 

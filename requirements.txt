@@ -1,12 +1,26 @@
 # Runtime dependencies for the meeting analysis pipeline.
 #
-# torch / torchvision are intentionally NOT listed: they are pre-installed
-# CUDA builds matched to this machine and are pinned in constraints.txt so pip
-# cannot replace them. Install with:
+#   pip install -r requirements.txt
 #
-#     pip install -r requirements.txt
-#     pip install -c constraints.txt faster-whisper pyannote.audio librosa soundfile
+# ---------------------------------------------------------------------------
+# PyTorch is deliberately NOT listed here, so that the right build for YOUR
+# machine is chosen explicitly. Install it FIRST, before this file:
 #
+#   NVIDIA GPU (recommended) - match the index to your CUDA version:
+#     pip install torch torchaudio --index-url https://download.pytorch.org/whl/cu124
+#
+#   CPU only - the pipeline still works, but diarization is far slower:
+#     pip install torch torchaudio --index-url https://download.pytorch.org/whl/cpu
+#
+# If you skip this, pyannote.audio pulls torch from PyPI automatically and you
+# get the CPU build.
+#
+# NOTE ON constraints.txt: that file is MACHINE-SPECIFIC. It pins the exact
+# CUDA build used on the development machine (torch==2.11.0+cu126), which is
+# NOT available on PyPI. It exists only to stop pip replacing an already
+# working CUDA install, so do NOT pass it on a fresh machine.
+# ---------------------------------------------------------------------------
+
 faster-whisper>=1.0.0
 pyannote.audio>=3.1.0
 transformers>=4.40.0
@@ -20,5 +34,5 @@ huggingface-hub>=0.23.0
 # Vietnamese word segmentation — improves PhoBERT emotion input
 pyvi>=0.1.1
 
-# Demo UI (optional)
+# Demo UI
 streamlit>=1.30.0
