@@ -43,7 +43,7 @@ Built for **fully local inference** on consumer hardware (NVIDIA RTX 3050 Laptop
 
 Every model-backed stage sits behind a protocol, so any component can be
 replaced (larger model, cloud API, custom diarizer) without touching the rest of
-the system. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+the system.
 
 ---
 
@@ -215,9 +215,6 @@ normalize  .py          faster-     word↔speaker   wav2vec2   PhoBERT
 - **Sequential GPU stages** — ASR and diarization never reside in VRAM
   simultaneously.
 
-Full details, data-flow diagrams, and decision records:
-[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
-
 ---
 
 ## Configuration
@@ -316,12 +313,15 @@ streamlit run app.py --server.address 127.0.0.1
 │   ├── emotion.py                Per-utterance Vietnamese emotion
 │   ├── pipeline.py               Stage orchestration and emission
 │   ├── cli.py                    Command-line entry point
+│   ├── evaluation.py             WER / CER / DER and label-accuracy metrics
+│   ├── evaluate.py               Evaluation CLI
 │   └── utils/
 │       ├── gpu.py                CUDA DLL registration, VRAM hygiene
 │       └── logging.py            UTF-8-safe logging setup
 ├── tests/
 │   ├── test_models.py            Output-contract tests
-│   └── test_alignment.py         Alignment edge-case tests
+│   ├── test_alignment.py         Alignment edge-case tests
+│   └── test_evaluation.py        Metric known-answer tests
 └── docs/
     ├── ARCHITECTURE.md           Design and data flow
     ├── IMPLEMENTATION_NOTES.md   Engineering record
@@ -340,9 +340,75 @@ python -m pytest tests -q
 ```
 
 The suite covers the output contract (exact line format, label validity,
-TXT/JSON agreement, diacritic preservation) and the alignment edge cases
+TXT/JSON agreement, diacritic preservation), the alignment edge cases
 (multi-speaker overlap, diarization gaps, leading gaps, silent turns, segment
-merging). It requires **no** model downloads or GPU.
+merging), and the evaluation metrics themselves against hand-computed known
+answers. It requires **no** model downloads and no GPU.
+
+---
+
+## Benchmarking against labelled data
+
+Accuracy is measured with standard metrics rather than inspected by eye.
+
+### 1. Create a labelling template
+
+```powershell
+$env:PYTHONPATH = "src"
+python -m meeting_analysis.evaluate --prediction data/artifacts/out.json `
+                                    --write-template data/artifacts/reference.json
+```
+
+This pre-fills timings, speakers, and labels from a prediction, so labelling
+means **correcting** fields rather than transcribing from scratch.
+
+### 2. Correct the reference by hand
+
+The reference uses the **same JSON shape** as the pipeline output:
+
+```json
+[
+  {
+    "start": 0.4,
+    "end": 2.31,
+    "speaker": "A",
+    "gender": "Nam",
+    "emotion": "Vui vẻ",
+    "text": "Chào cô"
+  }
+]
+```
+
+You do **not** need to label an entire recording: **2–3 minutes of audio** is
+enough for a statistically meaningful WER/DER estimate.
+
+### 3. Score
+
+```powershell
+python -m meeting_analysis.evaluate --reference data/artifacts/reference.json `
+                                    --prediction data/artifacts/out.json `
+                                    --report eval.md --json-out eval.json
+```
+
+### Metrics reported
+
+| Metric | Meaning |
+|---|---|
+| **WER** | Syllable-level word error rate (Vietnamese separates syllables with spaces), broken down into substitutions / deletions / insertions |
+| **CER** | Character-level error rate |
+| **DER** | Diarization error rate, decomposed into missed speech, false alarm, and speaker confusion |
+| **Speaker attribution accuracy** | Correct speaker on matched segments, after an **optimal** speaker mapping |
+| **Gender / emotion accuracy** | Label agreement on matched segments, plus an emotion confusion matrix |
+
+Segments are matched one-to-one by maximum temporal overlap, and **speaker
+relabelling is not penalised** — hypothesis speakers are mapped onto reference
+speakers by optimal assignment, so `SPEAKER_00` scoring against `A` counts as
+correct.
+
+> **Status.** The harness is implemented and unit-tested against hand-computed
+> known answers. **No accuracy figures are quoted yet**, because no
+> human-labelled Vietnamese reference has been produced. Publishing numbers
+> derived from the pipeline's own output would be circular and meaningless.
 
 ---
 
@@ -392,6 +458,8 @@ the next loads.
 
 ## Roadmap
 
+- [ ] **Labelled reference corpus** — hand-label 2–3 minutes of audio and publish
+      real WER / DER figures using `python -m meeting_analysis.evaluate`
 - [ ] **FastAPI service** — REST endpoints for upload and analysis
 - [ ] **SQLite job history** — persisted job/meeting metadata behind a
       repository interface (PostgreSQL-ready)
