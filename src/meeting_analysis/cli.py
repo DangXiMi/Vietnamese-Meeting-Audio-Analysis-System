@@ -27,6 +27,12 @@ def build_parser() -> argparse.ArgumentParser:
         "-o", "--out", type=Path, default=Path("data/artifacts"), help="output directory"
     )
     parser.add_argument("--asr-model", default=None, help="faster-whisper size (default: medium)")
+    parser.add_argument(
+        "--language",
+        default=None,
+        help="ASR language code, or 'auto' to detect (default: vi). Use 'auto' or 'en' "
+        "for mixed Vietnamese/English recordings.",
+    )
     parser.add_argument("--device", default=None, help="cuda | cpu")
     parser.add_argument("--num-speakers", type=int, default=None, help="fix the speaker count")
     parser.add_argument("-v", "--verbose", action="store_true", help="debug logging")
@@ -40,6 +46,8 @@ def main(argv: list[str] | None = None) -> int:
     settings = Settings()
     if args.asr_model:
         settings.asr_model = args.asr_model
+    if args.language:
+        settings.asr_language = None if args.language.lower() == "auto" else args.language
     if args.device:
         settings.device = args.device
     if args.num_speakers:

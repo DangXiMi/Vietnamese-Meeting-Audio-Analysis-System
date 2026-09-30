@@ -77,7 +77,7 @@ def render_results(result) -> None:
                     "Source": info.get("source"),
                 }
             )
-        st.dataframe(rows, use_container_width=True, hide_index=True)
+        st.dataframe(rows, width="stretch", hide_index=True)
 
     # --- emotion distribution ------------------------------------------------
     counts: dict[str, int] = {}
@@ -119,6 +119,13 @@ def main() -> None:
             index=0,
             help="large-v3 is more accurate but downloads ~3 GB on first use.",
         )
+        language = st.selectbox(
+            "Language",
+            ["vi", "auto", "en"],
+            index=0,
+            help="'auto' suits mixed Vietnamese/English recordings. Forcing a single "
+            "language mangles the other one into nonsense syllables.",
+        )
         device = st.selectbox("Device", ["cuda", "cpu"], index=0)
         forced = st.number_input(
             "Force speaker count (0 = auto-detect)", min_value=0, max_value=12, value=0
@@ -140,6 +147,7 @@ def main() -> None:
         source = save_upload(uploaded)
         settings = Settings()
         settings.asr_model = asr_model
+        settings.asr_language = None if language == "auto" else language
         settings.device = device
         settings.num_speakers = int(forced) or None
 
@@ -173,14 +181,14 @@ def main() -> None:
         txt_path.read_bytes(),
         file_name=txt_path.name,
         mime="text/plain",
-        use_container_width=True,
+        width="stretch",
     )
     right.download_button(
         "⬇️ Download segments (.json)",
         json_path.read_bytes(),
         file_name=json_path.name,
         mime="application/json",
-        use_container_width=True,
+        width="stretch",
     )
 
 

@@ -79,7 +79,7 @@ class Settings:
     # ASR
     asr_model: str = os.environ.get("ASR_MODEL", "medium")
     asr_compute_type: str = os.environ.get("ASR_COMPUTE_TYPE", "int8_float16")
-    asr_language: str = "vi"
+    asr_language: str | None = os.environ.get("ASR_LANGUAGE", "vi") or None
 
     # Diarization
     diarization_model: str = "pyannote/speaker-diarization-3.1"

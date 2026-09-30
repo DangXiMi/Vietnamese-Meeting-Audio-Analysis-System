@@ -15,8 +15,11 @@ logger = logging.getLogger(__name__)
 class FasterWhisperTranscriber:
     """Vietnamese ASR via faster-whisper (CTranslate2).
 
-    ``language`` is forced rather than auto-detected: short Vietnamese turns
-    frequently misdetect as English/Chinese, and detection costs an extra pass.
+    ``language`` is forced by default rather than auto-detected: short
+    Vietnamese turns frequently misdetect as English/Chinese, and detection
+    costs an extra pass. Pass ``language=None`` (or ``--language auto``) for
+    mixed Vietnamese/English recordings, where forcing one language mangles
+    the other into nonsense syllables.
     """
 
     def __init__(
@@ -24,7 +27,7 @@ class FasterWhisperTranscriber:
         model_size: str = "medium",
         device: str = "cuda",
         compute_type: str = "int8_float16",
-        language: str = "vi",
+        language: str | None = "vi",
         beam_size: int = 5,
     ) -> None:
         self.model_size = model_size
@@ -99,10 +102,8 @@ class FasterWhisperTranscriber:
             )
 
         logger.info("Transcribed %d segment(s)", len(collected))
-        return Transcript(
-            language=getattr(info, "language", self.language) or self.language,
-            segments=collected,
-        )
+        detected = getattr(info, "language", None) or self.language or "unknown"
+        return Transcript(language=detected, segments=collected)
 
     def unload(self) -> None:
         self._model = None
